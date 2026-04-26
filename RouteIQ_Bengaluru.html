@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RouteIQ — Smart Logistics · Bengaluru</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#08111a;--panel:#0e1c29;--card:#0f1e2d;--input:#071018;
+  --border:#162336;--border2:#1e3048;
+  --t1:#dce9f5;--t2:#6b8aaa;--t3:#2e4560;
+  --acc:#00d4a8;--acc2:rgba(0,212,168,0.1);
+  --green:#22c55e;--yellow:#f59e0b;--red:#ef4444;--orange:#f97316;
+  --gd:rgba(34,197,94,0.12);--yd:rgba(245,158,11,0.12);--rd:rgba(239,68,68,0.12);
+  --font:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --mono:'SF Mono','Fira Code','JetBrains Mono',monospace;
+}
+html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t1);overflow:hidden}
+#app{display:flex;height:100vh}
+
+/* ── LEFT SIDEBAR ── */
+#sidebar{width:295px;min-width:295px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;z-index:1000}
+.s-logo{padding:18px 20px 14px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,rgba(0,212,168,.05) 0%,transparent 100%)}
+.logo-mark{display:flex;align-items:center;gap:10px}
+.logo-icon{width:32px;height:32px;border-radius:8px;background:var(--acc);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#000;flex-shrink:0}
+.logo-name{font-size:18px;font-weight:700;letter-spacing:-0.5px;color:var(--acc)}
+.logo-sub{font-size:10px;color:var(--t2);margin-top:3px;letter-spacing:.8px;text-transform:uppercase}
+.s-sec{padding:14px 18px;border-bottom:1px solid var(--border)}
+.sec-lbl{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);margin-bottom:10px}
+.ig{margin-bottom:9px}
+.il{font-size:10px;color:var(--t2);margin-bottom:4px;display:flex;align-items:center;gap:5px}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.d-acc{background:var(--acc)}.d-y{background:var(--yellow)}.d-r{background:var(--red)}
+input[type=text]{width:100%;padding:8px 11px;background:var(--input);border:1px solid var(--border);border-radius:7px;color:var(--t1);font-size:12px;font-family:var(--font);outline:none;transition:border-color .2s,box-shadow .2s}
+input[type=text]:focus{border-color:var(--acc);box-shadow:0 0 0 2px rgba(0,212,168,.12)}
+input[type=text]::placeholder{color:var(--t3)}
+.stops-wrap{display:flex;flex-direction:column;gap:7px}
+.stop-row{display:flex;gap:5px;align-items:center}
+.stop-row input{flex:1}
+.btn-del{background:none;border:1px solid var(--border);color:var(--t2);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;line-height:1}
+.btn-del:hover{border-color:var(--red);color:var(--red);background:var(--rd)}
+.btn-add{width:100%;padding:7px;background:none;border:1px dashed var(--border2);border-radius:7px;color:var(--t2);font-size:11px;cursor:pointer;margin-top:5px;transition:all .2s;font-family:var(--font)}
+.btn-add:hover{border-color:var(--acc);color:var(--acc);background:var(--acc2)}
+.btn-gen{width:100%;padding:11px;background:var(--acc);color:#000;font-size:13px;font-weight:800;border:none;border-radius:8px;cursor:pointer;font-family:var(--font);letter-spacing:.2px;transition:all .2s;margin-bottom:7px}
+.btn-gen:hover{background:#00f5c0;transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,212,168,.3)}
+.btn-opt{width:100%;padding:10px;background:none;color:var(--t1);font-size:12px;font-weight:600;border:1px solid var(--border2);border-radius:8px;cursor:pointer;font-family:var(--font);transition:all .2s}
+.btn-opt:hover{border-color:var(--acc);color:var(--acc);background:var(--acc2)}
+#route-summary{display:none;padding:14px 18px;border-bottom:1px solid var(--border)}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}
+.sc{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:9px 11px}
+.sv{font-size:20px;font-weight:700;font-family:var(--mono);color:var(--t1)}
+.sl{font-size:9px;color:var(--t2);margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
+.sbadge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;margin-top:10px}
+.sc-ok{background:var(--gd);color:var(--green)}.sc-mod{background:var(--yd);color:var(--yellow)}.sc-bad{background:var(--rd);color:var(--red)}
+#stop-seq{padding:12px 18px;flex:1}
+.seq-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
+.seq-dot{width:19px;height:19px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#000;flex-shrink:0}
+.seq-name{font-size:11px;color:var(--t1)}
+.seq-dist{font-size:10px;color:var(--t3);font-family:var(--mono);margin-left:auto}
+
+/* ── MAP ── */
+#map-wrap{flex:1;position:relative}
+#map{width:100%;height:100%}
+.map-legend{position:absolute;bottom:28px;left:12px;z-index:500;background:rgba(8,17,26,.92);border:1px solid var(--border);border-radius:10px;padding:11px 13px;backdrop-filter:blur(8px)}
+.leg-t{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--t2);margin-bottom:7px;font-weight:700}
+.leg-row{display:flex;align-items:center;gap:7px;margin-bottom:4px;font-size:11px;color:var(--t1)}
+.leg-line{width:20px;height:3px;border-radius:2px}
+.map-hud{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:500;background:rgba(8,17,26,.88);border:1px solid var(--border);border-radius:20px;padding:6px 16px;font-size:11px;color:var(--t2);backdrop-filter:blur(8px);white-space:nowrap}
+.hud-live{color:var(--acc);font-weight:600}
+
+/* ── RIGHT PANEL ── */
+#rpanel{width:275px;min-width:275px;background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+.rp-header{padding:18px 15px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 1.6s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(34,197,94,.4)}50%{opacity:.7;box-shadow:0 0 0 5px rgba(34,197,94,0)}}
+.rp-title{font-size:13px;font-weight:600}
+.rp-time{font-size:11px;color:var(--t2);font-family:var(--mono);margin-left:auto}
+.corridor-sec{padding:13px 15px;border-bottom:1px solid var(--border)}
+.corr{margin-bottom:11px}
+.corr-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.corr-n{font-size:11px;color:var(--t1);font-weight:500}
+.corr-s{font-size:10px;font-family:var(--mono);color:var(--t2)}
+.corr-bar{width:100%;height:4px;background:var(--card);border-radius:2px;overflow:hidden}
+.corr-fill{height:100%;border-radius:2px;transition:width 1.2s ease,background-color .6s}
+.alerts-sec{flex:1;padding:13px 15px}
+.alert-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.a-badge{background:var(--rd);color:var(--red);font-size:9px;font-weight:800;padding:2px 7px;border-radius:10px;display:none}
+#alerts-box{display:flex;flex-direction:column;gap:7px}
+.acard{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--red);border-radius:8px;padding:11px;animation:slin .3s ease}
+@keyframes slin{from{transform:translateX(15px);opacity:0}to{transform:translateX(0);opacity:1}}
+.acard.warn{border-left-color:var(--yellow)}
+.acard.info{border-left-color:var(--acc)}
+.a-ic{font-size:13px;margin-bottom:4px}
+.a-tit{font-size:11px;font-weight:700;color:var(--t1);margin-bottom:3px;line-height:1.4}
+.a-msg{font-size:10px;color:var(--t2);margin-bottom:9px;line-height:1.5}
+.a-acts{display:flex;gap:5px}
+.btn-ap{flex:1;padding:6px 7px;background:var(--acc);color:#000;font-size:10px;font-weight:800;border:none;border-radius:6px;cursor:pointer;font-family:var(--font);transition:all .15s}
+.btn-ap:hover{background:#00f5c0}
+.btn-as{padding:6px 9px;background:none;color:var(--t2);font-size:10px;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-family:var(--font);transition:all .15s}
+.btn-as:hover{color:var(--t1)}
+.no-alerts{text-align:center;padding:28px 0;color:var(--t3);font-size:11px;line-height:1.7}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* Leaflet overrides */
+.leaflet-control-zoom{border:1px solid var(--border)!important;border-radius:8px!important;overflow:hidden;box-shadow:none!important}
+.leaflet-control-zoom a{background:var(--panel)!important;color:var(--t1)!important;border-bottom:1px solid var(--border)!important;line-height:26px!important}
+.leaflet-control-zoom a:hover{background:var(--card)!important;color:var(--acc)!important}
+.leaflet-control-attribution{display:none}
+.leaflet-tooltip{background:var(--panel);border:1px solid var(--border);color:var(--t1);border-radius:6px;font-size:11px;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.leaflet-tooltip-left:before,.leaflet-tooltip-right:before{border-right-color:var(--border);border-left-color:var(--border)}
+.vh-dot{width:14px;height:14px;background:var(--acc);border:2px solid #fff;border-radius:50%;box-shadow:0 0 8px var(--acc),0 0 16px rgba(0,212,168,.4);animation:vp 1.2s infinite}
+@keyframes vp{0%,100%{box-shadow:0 0 6px var(--acc),0 0 12px rgba(0,212,168,.3)}50%{box-shadow:0 0 12px var(--acc),0 0 24px rgba(0,212,168,.5)}}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ══════════════════ LEFT SIDEBAR ══════════════════ -->
+<aside id="sidebar">
+  <div class="s-logo">
+    <div class="logo-mark">
+      <div class="logo-icon">R</div>
+      <div>
+        <div class="logo-name">RouteIQ</div>
+        <div class="logo-sub">Smart Logistics · Bengaluru</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="s-sec">
+    <div class="sec-lbl">Route Setup</div>
+    <div class="ig">
+      <div class="il"><div class="dot d-acc"></div> Origin</div>
+      <input type="text" id="origin" list="loc-list" placeholder="e.g. MG Road" value="MG Road"/>
+    </div>
+    <div class="il" style="margin-bottom:7px"><div class="dot d-y"></div> Delivery Stops</div>
+    <div class="stops-wrap" id="stops-wrap"></div>
+    <button class="btn-add" onclick="addStop()">+ Add Stop</button>
+  </div>
+
+  <div class="s-sec">
+    <button class="btn-gen" onclick="generateRoute()">▶ Generate Route</button>
+    <button class="btn-opt" onclick="optimizeRoute()">⟳ Optimize Stop Order</button>
+  </div>
+
+  <div id="route-summary">
+    <div class="sec-lbl">Route Summary</div>
+    <div class="sg">
+      <div class="sc"><div class="sv" id="s-dist">—</div><div class="sl">Distance (km)</div></div>
+      <div class="sc"><div class="sv" id="s-time">—</div><div class="sl">Est. Time (min)</div></div>
+      <div class="sc"><div class="sv" id="s-stops">—</div><div class="sl">Stops</div></div>
+      <div class="sc"><div class="sv" id="s-delay">0</div><div class="sl">Delay (min)</div></div>
+    </div>
+    <div id="s-badge" class="sbadge sc-ok"><span>●</span> Route Clear</div>
+  </div>
+
+  <div id="stop-seq">
+    <div class="sec-lbl" style="margin-bottom:8px">Stop Sequence</div>
+    <div id="seq-list" style="font-size:11px;color:var(--t3)">Generate a route to see stop sequence.</div>
+  </div>
+</aside>
+
+<!-- ══════════════════ MAP ══════════════════ -->
+<div id="map-wrap">
+  <div id="map"></div>
+  <div class="map-hud">
+    <span class="hud-live">● LIVE</span>&nbsp; Bengaluru Real-Time Traffic &nbsp;|&nbsp; <span id="hud-update">Waiting for route...</span>
+  </div>
+  <div class="map-legend">
+    <div class="leg-t">Traffic</div>
+    <div class="leg-row"><div class="leg-line" style="background:#22c55e"></div> Smooth flow</div>
+    <div class="leg-row"><div class="leg-line" style="background:#f59e0b"></div> Moderate</div>
+    <div class="leg-row"><div class="leg-line" style="background:#ef4444"></div> Heavy</div>
+    <div class="leg-row" style="margin-top:6px"><div style="width:10px;height:10px;border-radius:50%;background:var(--acc);box-shadow:0 0 6px var(--acc)"></div> Your Vehicle</div>
+  </div>
+</div>
+
+<!-- ══════════════════ RIGHT PANEL ══════════════════ -->
+<aside id="rpanel">
+  <div class="rp-header">
+    <div class="live-dot"></div>
+    <span class="rp-title">Live Traffic</span>
+    <span class="rp-time" id="rp-time">--:--:--</span>
+  </div>
+
+  <div class="corridor-sec">
+    <div class="sec-lbl" style="margin-bottom:11px">Key Corridors</div>
+    <div class="corr">
+      <div class="corr-h"><span class="corr-n">Silk Board Junction</span><span class="corr-s" id="sp0">8 km/h</span></div>
+      <div class="corr-bar"><div class="corr-fill" id="cf0" style="width:90%;background:#ef4444"></div></div>
+    </div>
+    <div class="corr">
+      <div class="corr-h"><span class="corr-n">Marathahalli Bridge</span><span class="corr-s" id="sp1">11 km/h</span></div>
+      <div class="corr-bar"><div class="corr-fill" id="cf1" style="width:82%;background:#ef4444"></div></div>
+    </div>
+    <div class="corr">
+      <div class="corr-h"><span class="corr-n">Outer Ring Road</span><span class="corr-s" id="sp2">24 km/h</span></div>
+      <div class="corr-bar"><div class="corr-fill" id="cf2" style="width:52%;background:#f59e0b"></div></div>
+    </div>
+    <div class="corr">
+      <div class="corr-h"><span class="corr-n">Hosur Road</span><span class="corr-s" id="sp3">17 km/h</span></div>
+      <div class="corr-bar"><div class="corr-fill" id="cf3" style="width:67%;background:#f59e0b"></div></div>
+    </div>
+    <div class="corr">
+      <div class="corr-h"><span class="corr-n">Bellary Road (NH44)</span><span class="corr-s" id="sp4">36 km/h</span></div>
+      <div class="corr-bar"><div class="corr-fill" id="cf4" style="width:28%;background:#22c55e"></div></div>
+    </div>
+    <div class="corr">
+      <div class="corr-h"><span class="corr-n">Sarjapur Road</span><span class="corr-s" id="sp5">14 km/h</span></div>
+      <div class="corr-bar"><div class="corr-fill" id="cf5" style="width:74%;background:#ef4444"></div></div>
+    </div>
+    <div class="corr" style="margin-bottom:0">
+      <div class="corr-h"><span class="corr-n">Old Madras Road</span><span class="corr-s" id="sp6">20 km/h</span></div>
+      <div class="corr-bar"><div class="corr-fill" id="cf6" style="width:58%;background:#f59e0b"></div></div>
+    </div>
+  </div>
+
+  <div class="alerts-sec">
+    <div class="alert-h">
+      <div class="sec-lbl" style="margin-bottom:0">Active Alerts</div>
+      <div class="a-badge" id="a-badge">0</div>
+    </div>
+    <div id="alerts-box">
+      <div class="no-alerts" id="no-msg">No active disruptions.<br>Route is currently clear.</div>
+    </div>
+  </div>
+</aside>
+</div>
+
+<!-- Datalist -->
+<datalist id="loc-list">
+  <option value="MG Road"><option value="Brigade Road"><option value="Church Street">
+  <option value="Koramangala 5th Block"><option value="Koramangala 4th Block"><option value="Koramangala 1st Block">
+  <option value="Silk Board Junction"><option value="Marathahalli Bridge"><option value="Marathahalli">
+  <option value="Electronic City Phase 1"><option value="Electronic City Phase 2">
+  <option value="Whitefield"><option value="ITPL Main Road"><option value="Indiranagar">
+  <option value="HSR Layout"><option value="BTM Layout"><option value="Jayanagar">
+  <option value="Hebbal Flyover"><option value="Yeshwanthpur"><option value="KR Puram">
+  <option value="Sarjapur Road"><option value="Bellandur"><option value="Domlur">
+  <option value="Rajajinagar"><option value="Bannerghatta Road"><option value="Yelahanka">
+  <option value="Cunningham Road"><option value="Richmond Road"><option value="Ulsoor">
+  <option value="Frazer Town"><option value="Shivajinagar"><option value="Majestic">
+  <option value="Vijayanagar"><option value="Nagarbhavi"><option value="JP Nagar">
+  <option value="Jayanagar 4th Block"><option value="Malleswaram"><option value="Sadashivanagar">
+</datalist>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+// ════════════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════════════
+const LOC = {
+  "MG Road":[12.9757,77.6011],"Brigade Road":[12.9716,77.6089],"Church Street":[12.9747,77.6087],
+  "Koramangala 5th Block":[12.9352,77.6245],"Koramangala 4th Block":[12.9341,77.6177],
+  "Koramangala 1st Block":[12.9277,77.6278],"Silk Board Junction":[12.9177,77.6228],
+  "Marathahalli Bridge":[12.9591,77.7010],"Marathahalli":[12.9563,77.7014],
+  "Electronic City Phase 1":[12.8399,77.6770],"Electronic City Phase 2":[12.8442,77.6789],
+  "Whitefield":[12.9698,77.7499],"ITPL Main Road":[12.9716,77.7278],
+  "Indiranagar":[12.9784,77.6408],"HSR Layout":[12.9116,77.6389],
+  "BTM Layout":[12.9166,77.6101],"Jayanagar":[12.9250,77.5938],
+  "Hebbal Flyover":[13.0359,77.5970],"Yeshwanthpur":[13.0211,77.5512],
+  "KR Puram":[13.0048,77.6946],"Sarjapur Road":[12.9010,77.6878],
+  "Bellandur":[12.9305,77.6878],"Domlur":[12.9580,77.6430],
+  "Rajajinagar":[12.9898,77.5548],"Bannerghatta Road":[12.8933,77.5975],
+  "Yelahanka":[13.1007,77.5963],"Cunningham Road":[12.9966,77.5957],
+  "Richmond Road":[12.9626,77.6011],"Ulsoor":[12.9772,77.6232],
+  "Frazer Town":[12.9875,77.6189],"Shivajinagar":[12.9890,77.5984],
+  "Majestic":[12.9775,77.5716],"Vijayanagar":[12.9710,77.5370],
+  "Nagarbhavi":[12.9607,77.5177],"JP Nagar":[12.9063,77.5856],
+  "Jayanagar 4th Block":[12.9263,77.5919],"Malleswaram":[13.0035,77.5656],
+  "Sadashivanagar":[13.0068,77.5818]
+};
+
+const HOTSPOTS=[
+  {name:"Silk Board",c:[12.9177,77.6228],sev:.9},
+  {name:"Marathahalli",c:[12.9591,77.7010],sev:.84},
+  {name:"Hebbal Flyover",c:[13.0359,77.5970],sev:.69},
+  {name:"KR Circle",c:[12.9762,77.5899],sev:.62},
+  {name:"Tin Factory",c:[12.9984,77.6616],sev:.58},
+  {name:"Sarjapur Junction",c:[12.9010,77.6878],sev:.74},
+  {name:"Yeshwanthpur Circle",c:[13.0211,77.5512],sev:.55}
+];
+
+const CORRIDORS=[
+  {klo:6,khi:15,base:.9},{klo:9,khi:18,base:.82},
+  {klo:20,khi:35,base:.52},{klo:14,khi:26,base:.67},
+  {klo:30,khi:46,base:.28},{klo:11,khi:22,base:.74},
+  {klo:17,khi:28,base:.58}
+];
+
+// ════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════
+let map,stopCount=0,routeLayers=[],markers=[],
+    vehicleMarker=null,animTimer=null,
+    animPts=[],animIdx=0,
+    trafficTimer=null,alertTimer=null,
+    activeAlerts=[],alertId=0,
+    segData=[],currentPts=[];
+
+// ════════════════════════════════════════════════
+// MAP INIT
+// ════════════════════════════════════════════════
+map=L.map('map',{center:[12.9716,77.5946],zoom:12,zoomControl:true,attributionControl:false});
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+  subdomains:'abcd',maxZoom:19
+}).addTo(map);
+
+// ════════════════════════════════════════════════
+// STOP MANAGEMENT
+// ════════════════════════════════════════════════
+function addStop(val=''){
+  stopCount++;
+  const id='s'+stopCount;
+  const row=document.createElement('div');
+  row.className='stop-row';row.id='r'+id;
+  row.innerHTML=`<input type="text" class="stop-inp" id="${id}" list="loc-list" placeholder="Stop ${stopCount}..." value="${val}"/><button class="btn-del" onclick="removeStop('r${id}')">×</button>`;
+  document.getElementById('stops-wrap').appendChild(row);
+}
+function removeStop(id){const el=document.getElementById(id);if(el)el.remove();}
+
+// default stops
+addStop('Koramangala 5th Block');
+addStop('Silk Board Junction');
+addStop('Electronic City Phase 1');
+
+// ════════════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════════════
+function getCoords(name){
+  if(LOC[name])return LOC[name];
+  // fuzzy match
+  const k=Object.keys(LOC).find(k=>k.toLowerCase().includes(name.toLowerCase().slice(0,6)));
+  if(k)return LOC[k];
+  return[12.9716+(Math.random()-.5)*.18,77.5946+(Math.random()-.5)*.18];
+}
+
+function haversine(a,b){
+  const R=6371,dLa=(b[0]-a[0])*Math.PI/180,dLo=(b[1]-a[1])*Math.PI/180;
+  const h=Math.sin(dLa/2)**2+Math.cos(a[0]*Math.PI/180)*Math.cos(b[0]*Math.PI/180)*Math.sin(dLo/2)**2;
+  return R*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));
+}
+
+function lerp(a,b,t){return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]}
+
+function trafficLevel(pt){
+  let peak=0;
+  for(const h of HOTSPOTS){
+    const d=haversine(pt,h.c);
+    if(d<3.5){peak=Math.max(peak,h.sev*(1-d/3.5))}
+  }
+  return Math.max(0,Math.min(1,peak+(Math.random()-.35)*.18));
+}
+
+function tColor(lv){return lv<.38?'#22c55e':lv<.66?'#f59e0b':'#ef4444'}
+function tLabel(lv){return lv<.38?'Smooth':lv<.66?'Moderate':'Heavy'}
+
+// ════════════════════════════════════════════════
+// ROUTE GENERATION
+// ════════════════════════════════════════════════
+function getAllPoints(){
+  const ori=document.getElementById('origin').value.trim();
+  const stops=[...document.querySelectorAll('.stop-inp')].map(i=>i.value.trim()).filter(Boolean);
+  return[ori,...stops].filter(Boolean);
+}
+
+function clearRoute(){
+  routeLayers.forEach(l=>map.removeLayer(l));
+  markers.forEach(m=>map.removeLayer(m));
+  if(vehicleMarker)map.removeLayer(vehicleMarker);
+  if(animTimer)clearInterval(animTimer);
+  if(trafficTimer)clearInterval(trafficTimer);
+  if(alertTimer)clearInterval(alertTimer);
+  routeLayers=[];markers=[];vehicleMarker=null;
+  animPts=[];animIdx=0;segData=[];activeAlerts=[];
+  renderAlerts();
+}
+
+function generateRoute(){
+  clearRoute();
+  const pts=getAllPoints();
+  if(pts.length<2){showAlert('warn','Setup Required','Please enter an origin and at least one delivery stop.',false);return}
+  const coords=pts.map(getCoords);
+  currentPts=coords;
+  drawSegments(coords);
+  placeMarkers(coords,pts);
+  updateSummary(coords,pts);
+  startVehicle();
+  startLive();
+  renderSequence(pts,coords);
+  document.getElementById('hud-update').textContent='Route active · Updating every 8s';
+}
+
+// Draw route split into sub-segments, colored by traffic
+function drawSegments(coords){
+  const SUBS=10;
+  animPts=[];
+  segData=[];
+  for(let i=0;i<coords.length-1;i++){
+    const A=coords[i],B=coords[i+1];
+    for(let j=0;j<SUBS;j++){
+      const p0=lerp(A,B,j/SUBS),p1=lerp(A,B,(j+1)/SUBS);
+      const mid=lerp(A,B,(j+.5)/SUBS);
+      const lv=trafficLevel(mid);
+      segData.push({p0,p1,mid,lv,seg:i,sub:j});
+      const line=L.polyline([p0,p1],{color:tColor(lv),weight:5,opacity:.9,lineCap:'round'}).addTo(map);
+      routeLayers.push(line);
+      animPts.push(p0);
+    }
+  }
+  animPts.push(coords[coords.length-1]);
+  map.fitBounds(L.latLngBounds(coords),{padding:[60,60]});
+}
+
+function placeMarkers(coords,labels){
+  coords.forEach((c,i)=>{
+    const isO=i===0,isL=i===coords.length-1;
+    const bg=isO?'#00d4a8':isL?'#ef4444':'#f59e0b';
+    const lbl=isO?'S':String(i);
+    const icon=L.divIcon({
+      html:`<div style="width:22px;height:22px;border-radius:50%;background:${bg};border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#000;box-shadow:0 2px 8px rgba(0,0,0,.5)">${lbl}</div>`,
+      iconSize:[22,22],iconAnchor:[11,11],className:''
+    });
+    markers.push(L.marker(c,{icon}).bindTooltip(labels[i],{className:'leaflet-tooltip'}).addTo(map));
+  });
+}
+
+// ════════════════════════════════════════════════
+// VEHICLE ANIMATION
+// ════════════════════════════════════════════════
+function startVehicle(){
+  const icon=L.divIcon({
+    html:`<div class="vh-dot"></div>`,
+    iconSize:[14,14],iconAnchor:[7,7],className:''
+  });
+  vehicleMarker=L.marker(animPts[0],{icon,zIndexOffset:2000}).addTo(map);
+  animIdx=0;
+  animTimer=setInterval(()=>{
+    animIdx=(animIdx+1)%animPts.length;
+    if(vehicleMarker)vehicleMarker.setLatLng(animPts[animIdx]);
+  },280);
+}
+
+// ════════════════════════════════════════════════
+// SUMMARY
+// ════════════════════════════════════════════════
+function updateSummary(coords,pts){
+  let dist=0;
+  for(let i=0;i<coords.length-1;i++)dist+=haversine(coords[i],coords[i+1]);
+  const spd=22; // avg Bengaluru speed
+  const mins=Math.round(dist/spd*60);
+  document.getElementById('s-dist').textContent=dist.toFixed(1);
+  document.getElementById('s-time').textContent=mins;
+  document.getElementById('s-stops').textContent=pts.length-1;
+  document.getElementById('s-delay').textContent='0';
+  document.getElementById('route-summary').style.display='block';
+  setBadge(0);
+}
+
+function renderSequence(pts,coords){
+  const el=document.getElementById('seq-list');
+  let html='';
+  pts.forEach((p,i)=>{
+    const isO=i===0,isL=i===pts.length-1;
+    const bg=isO?'#00d4a8':isL?'#ef4444':'#f59e0b';
+    const lbl=isO?'S':String(i);
+    const dist=i>0?` · ${haversine(coords[i-1],coords[i]).toFixed(1)} km`:'';
+    html+=`<div class="seq-item"><div class="seq-dot" style="background:${bg}">${lbl}</div><span class="seq-name">${p}</span><span class="seq-dist">${dist}</span></div>`;
+  });
+  el.innerHTML=html;
+}
+
+function setBadge(delayMin){
+  const bd=document.getElementById('s-badge');
+  const heavyRatio=segData.filter(s=>s.lv>.65).length/Math.max(segData.length,1);
+  if(heavyRatio<.2){bd.className='sbadge sc-ok';bd.innerHTML='<span>●</span> Route Clear'}
+  else if(heavyRatio<.5){bd.className='sbadge sc-mod';bd.innerHTML='<span>●</span> Moderate Delays'}
+  else{bd.className='sbadge sc-bad';bd.innerHTML='<span>●</span> Heavy Congestion'}
+  document.getElementById('s-delay').textContent=delayMin;
+}
+
+// ════════════════════════════════════════════════
+// ROUTE OPTIMIZATION (Nearest Neighbor TSP)
+// ════════════════════════════════════════════════
+function optimizeRoute(){
+  const pts=getAllPoints();
+  if(pts.length<3){generateRoute();return}
+  const origin=pts[0];
+  let remaining=pts.slice(1).map(n=>({n,c:getCoords(n)}));
+  const ordered=[];
+  let cur=getCoords(origin);
+  while(remaining.length){
+    let bi=0,bd=Infinity;
+    remaining.forEach((s,i)=>{const d=haversine(cur,s.c);if(d<bd){bd=d;bi=i}});
+    ordered.push(remaining[bi]);
+    cur=remaining[bi].c;
+    remaining.splice(bi,1);
+  }
+  // write back to inputs
+  const inps=[...document.querySelectorAll('.stop-inp')];
+  ordered.forEach((s,i)=>{if(inps[i])inps[i].value=s.n});
+  generateRoute();
+  showAlert('info','Stops Reordered','Route optimized using nearest-neighbor algorithm. Estimated saving: '+Math.round(Math.random()*6+4)+' minutes.',false);
+}
+
+// ════════════════════════════════════════════════
+// LIVE TRAFFIC UPDATES
+// ════════════════════════════════════════════════
+const CORR_MSGS=[
+  {n:'Silk Board',r:'Hosur Road'},
+  {n:'Marathahalli',r:'Old Airport Road'},
+  {n:'Hebbal Flyover',r:'Bellary Road'},
+  {n:'Sarjapur junction',r:'ORR east'},
+  {n:'KR Circle',r:'Dr Rajkumar Road'},
+  {n:'Tin Factory',r:'Old Madras Road'},
+  {n:'Yeshwanthpur circle',r:'Tumkur Road'},
+];
+
+function startLive(){
+  tickTime();setInterval(tickTime,1000);
+  tickCorridors();trafficTimer=setInterval(tickCorridors,8000);
+  alertTimer=setInterval(maybeAlert,14000);
+  setTimeout(()=>maybeAlert(true),4000);
+}
+
+function tickTime(){
+  const t=new Date();
+  document.getElementById('rp-time').textContent=
+    t.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+}
+
+function tickCorridors(){
+  CORRIDORS.forEach((c,i)=>{
+    const n=(Math.random()-.4)*.12;
+    const lv=Math.max(.08,Math.min(.97,c.base+n));
+    const pct=Math.round(lv*100);
+    const color=tColor(lv);
+    const kph=Math.round(c.khi-(c.khi-c.klo)*lv+(Math.random()-.5)*2);
+    const cf=document.getElementById('cf'+i);
+    const sp=document.getElementById('sp'+i);
+    if(cf){cf.style.width=pct+'%';cf.style.background=color}
+    if(sp)sp.textContent=kph+' km/h';
+  });
+  // also update route segments
+  if(segData.length){
+    let delay=0;
+    segData.forEach((s,i)=>{
+      s.lv=trafficLevel(s.mid);
+      if(s.lv>.65)delay+=.4;
+      if(routeLayers[i])routeLayers[i].setStyle({color:tColor(s.lv)});
+    });
+    setBadge(Math.round(delay));
+  }
+  document.getElementById('hud-update').textContent='Last updated: '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
+}
+
+function maybeAlert(force=false){
+  if(!force && Math.random()<.45)return;
+  if(segData.length===0)return;
+  const m=CORR_MSGS[Math.floor(Math.random()*CORR_MSGS.length)];
+  const delay=Math.round(Math.random()*10+6);
+  const save=Math.round(delay*.6);
+  showAlert('danger',
+    'Heavy traffic near '+m.n,
+    `Delay of ${delay} min expected on ${m.r}. A faster alternative saves ~${save} minutes.`,
+    true,save);
+}
+
+// ════════════════════════════════════════════════
+// ALERT SYSTEM
+// ════════════════════════════════════════════════
+function showAlert(type,title,msg,hasActions,save=0){
+  const id=++alertId;
+  activeAlerts.unshift({id,type,title,msg,hasActions,save});
+  if(activeAlerts.length>5)activeAlerts.pop();
+  renderAlerts();
+}
+
+function dismissAlert(id){
+  activeAlerts=activeAlerts.filter(a=>a.id!==id);
+  renderAlerts();
+}
+
+function switchRoute(id,save){
+  dismissAlert(id);
+  // Lighten route colors (simulate better route)
+  segData.forEach((s,i)=>{
+    s.lv=Math.max(0,s.lv-.28);
+    if(routeLayers[i])routeLayers[i].setStyle({color:tColor(s.lv)});
+  });
+  const te=document.getElementById('s-time');
+  if(te){te.textContent=Math.max(8,parseInt(te.textContent||'30')-save)}
+  setBadge(0);
+  showAlert('info','Route Switched','Alternative route applied. Avoiding congestion zone. Estimated saving: '+save+' minutes.',false);
+}
+
+function renderAlerts(){
+  const box=document.getElementById('alerts-box');
+  const noMsg=document.getElementById('no-msg');
+  const badge=document.getElementById('a-badge');
+  const realCount=activeAlerts.filter(a=>a.hasActions).length;
+
+  if(activeAlerts.length===0){
+    box.innerHTML='';box.appendChild(noMsg);noMsg.style.display='block';
+    badge.style.display='none';return;
+  }
+  noMsg.style.display='none';
+  badge.style.display=realCount>0?'inline-flex':'none';
+  badge.textContent=realCount;
+
+  box.innerHTML=activeAlerts.map(a=>`
+    <div class="acard ${a.type==='danger'?'':a.type==='warn'?'warn':'info'}" id="ac${a.id}">
+      <div class="a-ic">${a.type==='danger'?'⚠':a.type==='info'?'✓':'!'}</div>
+      <div class="a-tit">${a.title}</div>
+      <div class="a-msg">${a.msg}</div>
+      ${a.hasActions?`<div class="a-acts">
+        <button class="btn-ap" onclick="switchRoute(${a.id},${a.save})">Switch to Better Route</button>
+        <button class="btn-as" onclick="dismissAlert(${a.id})">Ignore</button>
+      </div>`:''}
+    </div>`).join('');
+}
+
+// ════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════
+tickTime();setInterval(tickTime,1000);
+tickCorridors();setInterval(tickCorridors,8000);
+
+// Warm-up alert
+setTimeout(()=>{
+  showAlert('warn','Peak Hour Active',
+    'Silk Board and Marathahalli at 85%+ load. Plan routes before 5:30 PM for best results.',false);
+},1800);
+</script>
+</body>
+</html>
