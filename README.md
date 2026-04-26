@@ -1,4 +1,4 @@
-# 🚚 RouteIQ – Smart Logistics & Dynamic Supply Chain Optimization
+<img width="1402" height="1122" alt="ChatGPT Image Apr 26, 2026, 11_46_48 AM" src="https://github.com/user-attachments/assets/bbc12e1c-df22-4df4-8180-c9da8e392aae" /># 🚚 RouteIQ – Smart Logistics & Dynamic Supply Chain Optimization
 
 ## 📌 Overview
 RouteIQ is an AI-powered logistics platform designed to optimize delivery routes in real time. It analyzes traffic conditions and predicts potential disruptions to help businesses improve efficiency, reduce delays, and lower operational costs.
@@ -63,7 +63,9 @@ RouteIQ provides a smart, dynamic routing system that:
 ---
 
 ## 📸 MVP Snapshots
-(Add screenshots of your UI here)
+
+<img width="1402" height="1122" alt="ChatGPT Image Apr 26, 2026, 11_46_48 AM" src="https://github.com/user-attachments/assets/b5c68cf7-9315-4d71-a590-af9f9a2b176c" />
+
 
 ---
 
@@ -74,8 +76,8 @@ RouteIQ provides a smart, dynamic routing system that:
 ---
 
 ## 👨‍💻 Team
-- Team Name: [Your Team Name]
-- Team Leader: [Your Name]
+- Team Name: [Pirate2Pirate]
+- Team Leader: [Dilip Jadhav]
 
 ---
 
